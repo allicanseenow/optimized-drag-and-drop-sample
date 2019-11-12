@@ -6,11 +6,9 @@ const Container = styled.div`
     border: 1px solid lightgrey;
     padding: 8px;
     margin-bottom: 8px;
-    border-radius: 50%;
+    border-radius: 2px;
     background-color: ${({ isDragging, isDragDisabled }) =>
         isDragDisabled ? 'lightgrey' : isDragging ? 'lightgreen' : 'white'};
-    width: 40px;
-    height: 40px;
 
     display: flex;
     justify-content: center;
@@ -43,7 +41,7 @@ export const Task = props => {
                         ref={provided.innerRef}
                         isDragging={snapshot.isDragging}
                     >
-                        {props.task.content[0]}
+                        {props.task.content}
                     </Container>
                 );
             }}

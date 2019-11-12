@@ -1,7 +1,7 @@
 // @flow
 import React, { useCallback, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { DragDropContext, DropResult, DragStart } from 'react-beautiful-dnd';
+import { DragDropContext, DropResult, DragStart, Droppable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
 
 import { Column } from './component/Column';
@@ -32,6 +32,23 @@ const App = () => {
             document.body.style.backgroundColor = `rgba(153, 141, 217, ${opacity}`;
         },
         [state.tasks],
+    );
+
+    const updateColumnOrder = useCallback(
+        result => {
+            const { destination, source, draggableId } = result;
+
+            const newColumnOrder = [...state.columnOrder];
+            newColumnOrder.splice(source.index, 1);
+            newColumnOrder.splice(destination.index, 0, draggableId);
+
+            const newState = {
+                ...state,
+                columnOrder: newColumnOrder,
+            };
+            setState(newState);
+        },
+        [state],
     );
 
     const updateRowRelocationInSameColumn = useCallback(
@@ -71,7 +88,7 @@ const App = () => {
                 ...start,
                 taskIds: startTaskIds,
             };
-            console.log('result is ',result)
+            console.log('result is ', result);
 
             const finishTaskIds = Array.from(finish.taskIds);
             finishTaskIds.splice(destination.index, 0, draggableId);
@@ -97,7 +114,7 @@ const App = () => {
     const onDragEnd = useCallback(
         (result: DropResult) => {
             setHomeIndex(null);
-            const { destination, source } = result;
+            const { destination, source, type } = result;
             if (!destination) {
                 return;
             }
@@ -106,10 +123,14 @@ const App = () => {
                 return;
             }
 
+            if (type === 'column') {
+                return updateColumnOrder(result);
+            }
+
             const start = state.columns[source.droppableId];
             const finish = state.columns[destination.droppableId];
 
-            console.log('result outside is ', result)
+            console.log('result outside is ', result);
             if (start === finish) {
                 return updateRowRelocationInSameColumn(result);
             }
@@ -117,21 +138,33 @@ const App = () => {
             // Moving from one list to another
             updateRowRelocationInDifferentColumn(result, start, finish);
         },
-        [state.columns, updateRowRelocationInDifferentColumn, updateRowRelocationInSameColumn],
+        [state.columns, updateColumnOrder, updateRowRelocationInDifferentColumn, updateRowRelocationInSameColumn],
     );
 
     return (
         <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart} onDragUpdate={onDragUpdate}>
-            <Container>
-                {state.columnOrder.map((columnId, index) => {
-                    const column = state.columns[columnId];
-                    const tasks = column.taskIds.map(taskId => state.tasks[taskId]);
+            <Droppable droppableId="all-col" direction="horizontal" type="column">
+                {provided => (
+                    <Container {...provided.droppableProps} ref={provided.innerRef}>
+                        {state.columnOrder.map((columnId, index) => {
+                            const column = state.columns[columnId];
+                            const tasks = column.taskIds.map(taskId => state.tasks[taskId]);
 
-                    const isDropDisabled = index < homeIndex;
+                            const isDropDisabled = index < homeIndex;
 
-                    return <Column key={column.id} column={column} tasks={tasks} isDropDisabled={isDropDisabled} />;
-                })}
-            </Container>
+                            return (
+                                <Column
+                                    key={column.id}
+                                    column={column}
+                                    tasks={tasks}
+                                    isDropDisabled={isDropDisabled}
+                                    index={index}
+                                />
+                            );
+                        })}
+                    </Container>
+                )}
+            </Droppable>
         </DragDropContext>
     );
 };
