@@ -31,14 +31,14 @@ export const columns: ColumnType = {
         title: 'In Progress',
         taskIds: [],
     },
-    // 'column-3': {
-    //     id: 'column-3',
-    //     title: 'Done',
-    //     taskIds: [],
-    // },
+    'column-3': {
+        id: 'column-3',
+        title: 'Done',
+        taskIds: [],
+    },
 };
 
-export const columnOrder = ['column-1', 'column-2'];
+export const columnOrder = ['column-1', 'column-2', 'column-3'];
 
 const initialData = {
     tasks,
