@@ -1,5 +1,5 @@
 // @flow
-import React, { FC, memo, useCallback, useMemo, useState } from 'react';
+import React, {FC, memo, useCallback, useEffect, useMemo, useState} from 'react';
 import ReactDOM from 'react-dom';
 import { DragDropContext, DropResult, DragStart, Droppable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { Column } from './component';
 import initialData from './initial-data';
 import '@atlaskit/css-reset';
+import { run } from './utils';
 // import "./style.css";
 
 const Container = styled.div`
@@ -135,6 +136,10 @@ const App = () => {
         },
         [columns, updateColumnOrder, updateRowRelocationInDifferentColumn, updateRowRelocationInSameColumn],
     );
+
+    useEffect(() => {
+        run()
+    }, [false])
 
     return (
         <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart} onDragUpdate={onDragUpdate}>
