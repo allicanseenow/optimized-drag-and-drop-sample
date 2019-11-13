@@ -29,10 +29,8 @@ const Handle = styled.div`
 `;
 
 export const Task = props => {
-    const isDragDisabled = false;
-
     return (
-        <Draggable draggableId={props.task.id} index={props.index} isDragDisabled={isDragDisabled}>
+        <Draggable draggableId={props.task.id} index={props.index}>
             {(provided, snapshot) => {
                 return (
                     <Container

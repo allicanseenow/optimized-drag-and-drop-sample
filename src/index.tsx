@@ -1,10 +1,10 @@
 // @flow
-import React, { useCallback, useState } from 'react';
+import React, { FC, memo, useCallback, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { DragDropContext, DropResult, DragStart, Droppable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
 
-import { Column } from './component/Column';
+import { Column } from './component';
 import initialData from './initial-data';
 import '@atlaskit/css-reset';
 // import "./style.css";
@@ -13,48 +13,52 @@ const Container = styled.div`
     display: flex;
 `;
 
+const InnerList: FC<any> = memo(({ column, taskMap, index }) => {
+    const tasks = useMemo(() => column.taskIds.map(taskId => taskMap[taskId]), [column.taskIds, taskMap]);
+
+    return <Column key={column.id} column={column} tasks={tasks} index={index} />;
+});
+
 const App = () => {
-    const [state, setState] = useState(initialData);
+    const [tasks, setTasks] = useState(initialData.tasks);
+    const [columns, setColumns] = useState(initialData.columns);
+    const [columnOrder, setColumnOrder] = useState(initialData.columnOrder);
     const [homeIndex, setHomeIndex] = useState();
 
     const onDragStart = useCallback(
         (start: DragStart) => {
-            const homeIndex = state.columnOrder.indexOf(start.source.droppableId);
+            const homeIndex = columnOrder.indexOf(start.source.droppableId);
             setHomeIndex(homeIndex);
         },
-        [state.columnOrder],
+        [columnOrder],
     );
 
     const onDragUpdate = useCallback(
         update => {
             const { destination } = update;
-            const opacity = destination ? destination.index / Object.keys(state.tasks).length : 0;
+            const opacity = destination ? destination.index / Object.keys(tasks).length : 0;
             document.body.style.backgroundColor = `rgba(153, 141, 217, ${opacity}`;
         },
-        [state.tasks],
+        [tasks],
     );
 
     const updateColumnOrder = useCallback(
         result => {
             const { destination, source, draggableId } = result;
 
-            const newColumnOrder = [...state.columnOrder];
+            const newColumnOrder = [...columnOrder];
             newColumnOrder.splice(source.index, 1);
             newColumnOrder.splice(destination.index, 0, draggableId);
 
-            const newState = {
-                ...state,
-                columnOrder: newColumnOrder,
-            };
-            setState(newState);
+            setColumnOrder(newColumnOrder);
         },
-        [state],
+        [columnOrder],
     );
 
     const updateRowRelocationInSameColumn = useCallback(
         result => {
             const { destination, source, draggableId } = result;
-            const column = state.columns[source.droppableId];
+            const column = columns[source.droppableId];
             const newTaskIds = Array.from(column.taskIds);
 
             newTaskIds.splice(source.index, 1);
@@ -65,17 +69,11 @@ const App = () => {
                 taskIds: newTaskIds,
             };
 
-            const newState = {
-                ...state,
-                columns: {
-                    ...state.columns,
-                    [newColumn.id]: newColumn,
-                },
-            };
+            const newColumns = { ...columns, [newColumn.id]: newColumn };
 
-            setState(newState);
+            setColumns(newColumns);
         },
-        [state],
+        [columns],
     );
 
     const updateRowRelocationInDifferentColumn = useCallback(
@@ -97,18 +95,15 @@ const App = () => {
                 taskIds: finishTaskIds,
             };
 
-            const newState = {
-                ...state,
-                columns: {
-                    ...state.columns,
-                    [newStart.id]: newStart,
-                    [newFinish.id]: newFinish,
-                },
+            const newColumns = {
+                ...columns,
+                [newStart.id]: newStart,
+                [newFinish.id]: newFinish,
             };
 
-            setState(newState);
+            setColumns(newColumns);
         },
-        [state],
+        [columns],
     );
 
     const onDragEnd = useCallback(
@@ -127,8 +122,8 @@ const App = () => {
                 return updateColumnOrder(result);
             }
 
-            const start = state.columns[source.droppableId];
-            const finish = state.columns[destination.droppableId];
+            const start = columns[source.droppableId];
+            const finish = columns[destination.droppableId];
 
             console.log('result outside is ', result);
             if (start === finish) {
@@ -138,7 +133,7 @@ const App = () => {
             // Moving from one list to another
             updateRowRelocationInDifferentColumn(result, start, finish);
         },
-        [state.columns, updateColumnOrder, updateRowRelocationInDifferentColumn, updateRowRelocationInSameColumn],
+        [columns, updateColumnOrder, updateRowRelocationInDifferentColumn, updateRowRelocationInSameColumn],
     );
 
     return (
@@ -146,22 +141,12 @@ const App = () => {
             <Droppable droppableId="all-col" direction="horizontal" type="column">
                 {provided => (
                     <Container {...provided.droppableProps} ref={provided.innerRef}>
-                        {state.columnOrder.map((columnId, index) => {
-                            const column = state.columns[columnId];
-                            const tasks = column.taskIds.map(taskId => state.tasks[taskId]);
+                        {columnOrder.map((columnId, index) => {
+                            const column = columns[columnId];
 
-                            const isDropDisabled = index < homeIndex;
-
-                            return (
-                                <Column
-                                    key={column.id}
-                                    column={column}
-                                    tasks={tasks}
-                                    isDropDisabled={isDropDisabled}
-                                    index={index}
-                                />
-                            );
+                            return <InnerList key={column.id} column={column} taskMap={tasks} index={index} />;
                         })}
+                        {provided.placeholder}
                     </Container>
                 )}
             </Droppable>
