@@ -28,22 +28,13 @@ export function generateData(numberOfX: number, numberOfY: number, imageDataArra
     const columns: ColumnType = {};
 
     for (let i = 0; i <numberOfY; ++i) {
-        for (let j = 0; j < numberOfX; ++j) {
-            const id = `column-${i + 1}`;
-            if (i === 0) {
-                columns[id] = {
-                    title: id,
-                    id,
-                    rowIds: imageDataArray
-                }
-            } else {
-                columns[id] = {
-                    title: id,
-                    id,
-                    rowIds: []
-                }
-            }
+        const id = `column-${i + 1}`;
+        columns[id] = {
+            title: id,
+            id,
+            rowIds: imageDataArray.slice(i * numberOfX, (i + 1) * numberOfX);
         }
+
     }
 
     const columnOrder = Object.keys(columns);
