@@ -1,13 +1,3 @@
-const canvas: any = document.getElementById('canvas');
-console.log('canvas is ', canvas)
-const ctx = canvas.getContext('2d');
-
-const canvas2: any = document.getElementById('canvas2');
-const ctx2 = canvas2.getContext('2d');
-
-const cw = canvas.width;
-const ch = canvas.height;
-
 const rows = 3;
 const cols = 3;
 
@@ -17,12 +7,13 @@ const img = new Image();
 // img.onload = start;
 
 function shuffle(a) {
-    for (var j, x, i = a.length; i; j = Math.floor(Math.random() * i), x = a[--i], a[i] = a[j], a[j] = x);
+    for (let j, x, i = a.length; i; j = Math.floor(Math.random() * i), x = a[--i], a[i] = a[j], a[j] = x);
     return a;
 }
 
 img.src = 'rose-blue-flower.jpeg';
-function start() {
+function shuffleCanvas(canvas) {
+    const ctx = canvas.getContext('2d');
     const iw = (canvas.width = img.width);
     const ih = (canvas.height = img.height);
     const pieceWidth = iw / cols;
@@ -65,43 +56,49 @@ function start() {
     }
 }
 
-export const test = (tilesX, tilesY) => {
+export const splitImageToPieces = (tilesX, tilesY, canvas) => {
+    const ctx = canvas.getContext('2d');
     const tileWidth = canvas.width / tilesX;
     const tileHeight = canvas.height / tilesY;
-    const totalTiles = tilesX * tilesY;
     const tileData: any = [];
     for (let i = 0; i < tilesY; i++) {
         for (let j = 0; j < tilesX; j++) {
             // Store the image data of each tile in the array.
-            const canvas = document.createElement('canvas');
-            const image = new Image();
-            image.onload = () => {
-            };
             tileData.push(ctx.getImageData(j * tileWidth, i * tileHeight, tileWidth, tileHeight));
         }
     }
     //From here you should be able to draw your images back into a canvas like so:
+    const newCanvas: any = document.createElement('canvas');
+    const newCtx = newCanvas.getContext('2d');
 
-    console.log('tileData is ', tileData);
-    const img = new Image();
-    ctx2.putImageData(tileData[2], 0, 0);
-    img.src = canvas2.toDataURL('image/jpeg');
-    document.body.appendChild(img);
-    img.onload = () => {
-
-        console.log('you know')
-    };
+    return shuffle(
+        tileData.map(tileImageData => {
+            newCanvas.width = tileData[1].width;
+            newCanvas.height = tileData[1].height;
+            newCtx.putImageData(tileImageData, 0, 0);
+            const img = new Image();
+            img.src = newCanvas.toDataURL('image/jpeg');
+            // img.onload = () => {
+            //     document.body.appendChild(img);
+            // };
+            return img;
+        }),
+    );
 };
 
-export const run = () => {
-    console.log('run this');
-    // img.onload = start;
-    // start();
-    const imageObj = new Image();
-    imageObj.src = 'rose-blue-flower.jpeg';
-    console.log('imageObj.width is ', imageObj.width)
-    imageObj.onload = () => {
-        ctx.drawImage(imageObj, 0, 0, imageObj.width, imageObj.height, 0, 0, canvas.width, canvas.height);
-        test(3, 3);
-    };
+export const splitImage = async (imageDataURL?: string) => {
+    return new Promise((resolve, reject) => {
+        const imageObj = new Image();
+        imageObj.src = imageDataURL || 'rose-blue-flower.jpeg';
+        imageObj.onload = () => {
+            try {
+                const canvas: any = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imageObj, 0, 0, imageObj.width, imageObj.height, 0, 0, canvas.width, canvas.height);
+                return resolve(splitImageToPieces(3, 4, canvas));
+            } catch (e) {
+                reject(e);
+            }
+        };
+    });
 };
