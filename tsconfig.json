@@ -23,7 +23,8 @@
     "noEmit": true,
     "incremental": true,
     "preserveConstEnums": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "esModuleInterop": true
   },
   "include": [
     "src"

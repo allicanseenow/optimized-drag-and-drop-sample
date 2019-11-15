@@ -72,12 +72,13 @@ export const splitImageToPieces = (tilesX, tilesY, canvas) => {
     const newCtx = newCanvas.getContext('2d');
 
     return shuffle(
-        tileData.map(tileImageData => {
+        tileData.map((tileImageData, index) => {
             newCanvas.width = tileData[1].width;
             newCanvas.height = tileData[1].height;
             newCtx.putImageData(tileImageData, 0, 0);
             const img = new Image();
             img.src = newCanvas.toDataURL('image/jpeg');
+            img.id = `image-${index + 1}`;
             // img.onload = () => {
             //     document.body.appendChild(img);
             // };
@@ -86,7 +87,7 @@ export const splitImageToPieces = (tilesX, tilesY, canvas) => {
     );
 };
 
-export const splitImage = async (imageDataURL?: string) => {
+export const splitImage: any = async (imageDataURL?: string) => {
     return new Promise((resolve, reject) => {
         const imageObj = new Image();
         imageObj.src = imageDataURL || 'rose-blue-flower.jpeg';

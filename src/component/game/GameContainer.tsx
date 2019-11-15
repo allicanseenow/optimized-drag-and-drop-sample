@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { splitImage } from '../../utils';
+import { splitImage, generateData } from '../../utils';
+import { DraggableContainer } from './DraggableContainer';
 
 export const GameContainer = () => {
     const [file, setFile] = useState([]);
     const [imageDataURL, setImageDataURL] = useState();
+    const [data, setData] = useState();
 
     const onUploadImage = useCallback(e => {
         const reader = new FileReader();
@@ -22,15 +24,19 @@ export const GameContainer = () => {
 
     useEffect(() => {
         if (imageDataURL) {
-            splitImage(imageDataURL).then(res => {
+            splitImage(imageDataURL).then((res: []) => {
                 console.log('res is ', res);
+                const data = generateData(3, 3, res);
+                setData(data);
             });
         }
     }, [imageDataURL]);
 
+    console.log('game is ', data)
     return (
         <div>
             <input type="file" onChange={onUploadImage} accept="image/*" />
+            {data && <DraggableContainer data={data} />}
         </div>
     );
 };
